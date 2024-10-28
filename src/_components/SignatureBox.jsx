@@ -1,31 +1,28 @@
 import SignatureCanvas from "react-signature-canvas";
 
-// const githubButtonStyle = {
+const githubButtonStyle = {
+  display: "inline-block",
+  outline: 0,
+  cursor: "pointer",
+  padding: "1px 4px",
+  fontSize: 12,
+  fontWeight: 500,
+  lineHeight: "15px",
+  verticalAlign: "middle",
+  border: "1px solid",
+  borderRadius: 6,
+  color: "#ffffff",
+  backgroundColor: "#2ea44f",
+  borderColor: "#1b1f2326",
+  boxShadow: "rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset",
+  transition: "0.2s cubic-bezier(0.3, 0, 0.5, 1)",
+  transitionProperty: "color, background-color, border-color",
+  "&:hover": {
+    backgroundColor: "darkgreen",
+  },
+};
 
-//   display: "inline-block",
-//   outline: 0,
-//   cursor: "pointer",
-//   padding: 5px 16px,
-//   font-size: 14px,
-//   font-weight: 500,
-//   line-height: 20px,
-//   vertical-align: middle,
-//   border: 1px solid,
-//   border-radius: 6px,
-//   color: #ffffff,
-//   background-color: #2ea44f,
-//   border-color: #1b1f2326,
-//   box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset,
-//   transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1),
-//   transition-property: color, background-color, border-color,
-//   :hover {
-//       background-color: #2c974b,
-//       border-color: #1b1f2326,
-//       transition-duration: 0.1s,
-//   }
-// }
-
-const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 110, sigRef }) => {
+const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 110, sigRef, buttonPosition }) => {
   const clear = () => sigRef.current.clear();
 
   return (
@@ -33,7 +30,6 @@ const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 1
       style={{
         transform: `TranslateY(-${positionY + height}px) TranslateX(${positionX}px)`,
         position: "absolute",
-        // transformOrigin: "bottom left",
       }}
     >
       <div
@@ -47,7 +43,9 @@ const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 1
       >
         <SignatureCanvas ref={sigRef} penColor="black" canvasProps={{ width, height }} />
       </div>
-      <button onClick={clear}>reset</button>
+      <button style={githubButtonStyle} onClick={clear}>
+        reset
+      </button>
     </div>
   );
 };
