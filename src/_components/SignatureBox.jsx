@@ -41,7 +41,14 @@ const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 1
           backgroundColor: "#fff",
         }}
       >
-        <SignatureCanvas ref={sigRef} penColor="black" canvasProps={{ width, height }} />
+        <SignatureCanvas
+          ref={sigRef}
+          penColor="black"
+          canvasProps={{ width, height }}
+          minWidth={1}
+          maxWidth={1}
+          velocityFilterWeight={0.1}
+        />
       </div>
       <button style={githubButtonStyle} onClick={clear}>
         reset
