@@ -1,14 +1,16 @@
 import { pdfjs } from "react-pdf";
 import { Document, Page } from "react-pdf";
 import pdfFile from "./assets/sample-pdf-2-pages.pdf";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRef } from "react";
 import SignatureBox from "./_components/SignatureBox";
+import { PDFDocument } from "pdf-lib";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 
 const RPDF = () => {
   const [numPages, setNumPages] = useState(null);
+  const [modifiedPdfUrl, setModifiedPdfUrl] = useState(null);
   const [signatures, setSignatures] = useState([
     {
       shouldRender: true,
@@ -16,7 +18,7 @@ const RPDF = () => {
       sigDrawn: false,
       stepTitle: "ב3. הצהרת העובד",
       page: 1,
-      sigPosition: { x: 265, y: 220, width: 250, height: 120 },
+      sigPosition: { x: 265, y: 109, width: 245, height: 110 },
     },
     {
       shouldRender: true,
@@ -24,13 +26,60 @@ const RPDF = () => {
       sigDrawn: false,
       stepTitle: "ב3. הצהרת העובד",
       page: 1,
-      sigPosition: { x: 165, y: 500, width: 250, height: 120 },
+      sigPosition: { x: 130, y: 590, width: 190, height: 100 },
+    },
+    {
+      shouldRender: true,
+      ref: useRef(null),
+      sigDrawn: false,
+      stepTitle: "ב3. הצהרת העובד",
+      page: 2,
+      sigPosition: { x: 265, y: 109, width: 245, height: 110 },
     },
   ]);
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
   }
+
+  const updatePdfWithSignature = async () => {
+    const sigCanvasPromises = signatures.map((sig) => sig.ref.current.getCanvas());
+    const signatureCanvases = await Promise.all(sigCanvasPromises);
+
+    if (signatureCanvases.some((signatureCanvas) => signatureCanvas.width === 0 || signatureCanvas.height === 0)) {
+      console.log("No signature drawn");
+      return;
+    }
+
+    const existingPdfBytes = await fetch(pdfFile).then((res) => res.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+    // Embed signatures
+    const pngImagePromises = signatureCanvases.map((canvas) => fetch(canvas.toDataURL()).then((res) => res.arrayBuffer()));
+    const pngImageBytes = await Promise.all(pngImagePromises);
+    const pngImages = await Promise.all(pngImageBytes.map((bytes) => pdfDoc.embedPng(bytes)));
+
+    signatures.forEach((signature, index) => {
+      const pngImage = pngImages[index];
+      const page = pdfDoc.getPage(signature.page - 1);
+      page.drawImage(pngImage, signature.sigPosition);
+    });
+
+    const modifiedPdfBytes = await pdfDoc.save();
+    const blob = new Blob([modifiedPdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+
+    setModifiedPdfUrl(url);
+  };
+
+  useEffect(() => {
+    if (modifiedPdfUrl) {
+      const a = document.createElement("a");
+      a.href = modifiedPdfUrl;
+      a.download = "signed_pdf.pdf";
+      a.click();
+    }
+  }, [modifiedPdfUrl]);
 
   return (
     <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
@@ -42,7 +91,7 @@ const RPDF = () => {
                 return (
                   <SignatureBox
                     key={index}
-                    ref={signature.ref}
+                    sigRef={signature.ref}
                     width={signature.sigPosition.width}
                     height={signature.sigPosition.height}
                     positionX={signature.sigPosition.x}
@@ -58,15 +107,8 @@ const RPDF = () => {
             })}
           </Page>
         ))}
-
-        {/* <Page pageNumber={1} renderAnnotationLayer={false} renderTextLayer={false}>
-          <SignatureBox width={250} height={120} positionX={265} positionY={220} />
-        </Page>
-        <Page pageNumber={2} renderAnnotationLayer={false} renderTextLayer={false}>
-          <SignatureBox width={250} height={120} positionX={265} positionY={220} />
-        </Page> */}
       </div>
-      <button onClick={() => console.log("OK")}>OK!</button>
+      <button onClick={updatePdfWithSignature}>OK!</button>
     </Document>
   );
 };

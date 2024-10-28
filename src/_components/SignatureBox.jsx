@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { useRef } from "react";
 import SignatureCanvas from "react-signature-canvas";
 
 // const githubButtonStyle = {
-  
+
 //   display: "inline-block",
 //   outline: 0,
 //   cursor: "pointer",
@@ -27,14 +25,17 @@ import SignatureCanvas from "react-signature-canvas";
 //   }
 // }
 
-const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 110 }) => {
-  const sigCanvas = useRef({})
-  const clear = () => sigCanvas.current.clear();
-  
-
+const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 110, sigRef }) => {
+  const clear = () => sigRef.current.clear();
 
   return (
-    <div style={{transform: `TranslateY(-${positionY}px) TranslateX(${positionX}px)`,position: "absolute"}}>
+    <div
+      style={{
+        transform: `TranslateY(-${positionY + height}px) TranslateX(${positionX}px)`,
+        position: "absolute",
+        // transformOrigin: "bottom left",
+      }}
+    >
       <div
         style={{
           width,
@@ -44,7 +45,7 @@ const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 1
           backgroundColor: "#fff",
         }}
       >
-        <SignatureCanvas ref={sigCanvas} penColor="black" canvasProps={{ width, height }} />
+        <SignatureCanvas ref={sigRef} penColor="black" canvasProps={{ width, height }} />
       </div>
       <button onClick={clear}>reset</button>
     </div>
