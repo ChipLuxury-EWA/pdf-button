@@ -66,3 +66,16 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.sig_canvas {
+  border: 1px solid #000;
+  margin-top: 10px;
+  cursor: crosshair;
+  background-color: #fff;
+  transform: TranslateY(-225px) TranslateX(265px);
+  position: absolute;
+}
+
+.sb_page {
+  margin-bottom: 20px;
+}
