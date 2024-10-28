@@ -1,6 +1,5 @@
-import { pdfjs } from "react-pdf";
-import { Document, Page } from "react-pdf";
-import pdfFile from "./assets/sample-pdf-2-pages.pdf";
+import { Document, Page, pdfjs } from "react-pdf";
+import pdfFile from "./assets/tofes-161.pdf";
 import { useEffect, useState } from "react";
 import { useRef } from "react";
 import SignatureBox from "./_components/SignatureBox";
@@ -16,25 +15,22 @@ const RPDF = () => {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
-      stepTitle: "ב3. הצהרת העובד",
-      page: 1,
-      sigPosition: { x: 265, y: 109, width: 245, height: 110 },
+      page: 3,
+      sigPosition: { x: 70, y: 298, width: 105, height: 43 },
     },
     {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
-      stepTitle: "ב3. הצהרת העובד",
-      page: 1,
-      sigPosition: { x: 130, y: 590, width: 190, height: 100 },
+      page: 4,
+      sigPosition: { x: 35, y: 40, width: 90, height: 29 },
     },
     {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
-      stepTitle: "ב3. הצהרת העובד",
-      page: 2,
-      sigPosition: { x: 265, y: 109, width: 245, height: 110 },
+      page: 4,
+      sigPosition: { x: 130, y: 40, width: 90, height: 29 },
     },
   ]);
 
