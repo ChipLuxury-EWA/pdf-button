@@ -39,7 +39,7 @@ const RPDF = ({ signedInUserRole }) => {
     },
     {
       shouldRender: true,
-      signerRole: ["employer2"],
+      signerRole: ["employer1", "employer2"],
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
