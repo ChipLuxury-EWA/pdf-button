@@ -51,7 +51,8 @@ const RPDF = () => {
   }
 
   const updatePdfWithSignature = async () => {
-    const sigCanvasPromises = signatures.filter((sig) => sig.shouldRender).map((sig) => sig.ref.current.getCanvas());
+    const signaturesToRender = signatures.filter((sig) => sig.shouldRender);
+    const sigCanvasPromises = signaturesToRender.map((sig) => sig.ref.current.getCanvas());
     const signatureCanvases = await Promise.all(sigCanvasPromises);
 
     if (signatureCanvases.some((signatureCanvas) => signatureCanvas.width === 0 || signatureCanvas.height === 0)) {
@@ -66,8 +67,8 @@ const RPDF = () => {
     const pngImagePromises = signatureCanvases.map((canvas) => fetch(canvas.toDataURL()).then((res) => res.arrayBuffer()));
     const pngImageBytes = await Promise.all(pngImagePromises);
     const pngImages = await Promise.all(pngImageBytes.map((bytes) => pdfDoc.embedPng(bytes)));
-
-    signatures.filter((sig) => sig.shouldRender).forEach((signature, index) => {
+    
+    signaturesToRender.forEach((signature, index) => {
       const pngImage = pngImages[index];
       const page = pdfDoc.getPage(signature.page - 1);
       page.drawImage(pngImage, signature.sigPosition);
