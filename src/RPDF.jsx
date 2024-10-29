@@ -10,6 +10,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.m
 const RPDF = () => {
   const [numPages, setNumPages] = useState(null);
   const [modifiedPdfUrl, setModifiedPdfUrl] = useState(null);
+  const [pageWidth, setPageWidth] = useState(window.innerWidth * 0.8);
+  const [pageHeight, setPageHeight] = useState(0); // Update based on rendered page
+
   const [signatures, setSignatures] = useState([
     {
       shouldRender: true,
@@ -20,7 +23,7 @@ const RPDF = () => {
       sigPosition: { x: 70, y: 298, width: 105, height: 43 },
     },
     {
-      shouldRender: true,
+      shouldRender: false,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
@@ -28,7 +31,7 @@ const RPDF = () => {
       sigPosition: { x: 35, y: 40, width: 90, height: 29 },
     },
     {
-      shouldRender: true,
+      shouldRender: false,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
@@ -44,7 +47,7 @@ const RPDF = () => {
   }
 
   const updatePdfWithSignature = async () => {
-    const sigCanvasPromises = signatures.map((sig) => sig.ref.current.getCanvas());
+    const sigCanvasPromises = signatures.filter((sig) => sig.shouldRender).map((sig) => sig.ref.current.getCanvas());
     const signatureCanvases = await Promise.all(sigCanvasPromises);
 
     if (signatureCanvases.some((signatureCanvas) => signatureCanvas.width === 0 || signatureCanvas.height === 0)) {
@@ -82,16 +85,25 @@ const RPDF = () => {
     }
   }, [modifiedPdfUrl]);
 
+  useEffect(() => {
+    const handleResize = () => setPageWidth(window.innerWidth * 0.8);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {Array.from(new Array(numPages), (el, index) => index + 1).map((pageNumber) => (
           <Page
-            // width={1280}
+            width={pageWidth}
             key={pageNumber}
             pageNumber={pageNumber}
             renderAnnotationLayer={false}
             renderTextLayer={false}
+            onLoadSuccess={(page) => {
+              setPageHeight((page.height / page.width) * pageWidth);
+            }}
           >
             {signatures.map((signature, index) => {
               if (signature.page === pageNumber && signature.shouldRender) {
@@ -107,6 +119,10 @@ const RPDF = () => {
                       signature.sigDrawn = true;
                       setSignatures([...signatures]);
                     }}
+                    posXPercent={0.1}
+                    posYPercent={0.2}
+                    pageWidth={pageWidth}
+                    pageHeight={pageHeight}
                   />
                 );
               }

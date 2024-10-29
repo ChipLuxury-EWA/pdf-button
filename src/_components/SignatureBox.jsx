@@ -14,8 +14,21 @@ const githubButtonStyle = {
   left: -2,
 };
 
-const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 110, sigRef, buttonPosition, onDraw }) => {
+const SignatureBox = ({
+  width = 250,
+  height = 100,
+  posXPercent = 0.05,
+  posYPercent = 0.2,
+  sigRef,
+  pageWidth,
+  pageHeight,
+  onDraw,
+}) => {
   const clear = () => sigRef.current.clear();
+
+  // Calculate positions based on percentage of pageWidth and pageHeight
+  const positionX = posXPercent * pageWidth;
+  const positionY = posYPercent * pageHeight;
 
   return (
     <div
