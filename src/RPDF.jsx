@@ -16,13 +16,14 @@ const calcPageScale = () => {
   return Math.min(windowScale, maxScale);
 };
 
-const RPDF = () => {
+const RPDF = ({ signedInUserRole }) => {
   const [pageScale, setPageScale] = useState(calcPageScale);
   const [numPages, setNumPages] = useState(null);
   const [modifiedPdfUrl, setModifiedPdfUrl] = useState(null);
   const [signatures, setSignatures] = useState([
     {
       shouldRender: true,
+      signerRole: ["worker"],
       ref: useRef(null),
       sigDrawn: false,
       page: 3,
@@ -30,6 +31,7 @@ const RPDF = () => {
     },
     {
       shouldRender: true,
+      signerRole: ["employer1"],
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
@@ -37,6 +39,7 @@ const RPDF = () => {
     },
     {
       shouldRender: true,
+      signerRole: ["employer2"],
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
@@ -44,15 +47,14 @@ const RPDF = () => {
     },
   ]);
 
-  const allSignaturesDrawn = signatures.some((sig) => sig.shouldRender && !sig.sigDrawn);
+  const allSignaturesDrawn = signatures.some((sig) => sig.signerRole.includes(signedInUserRole) && !sig.sigDrawn);
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
   }
 
   const updatePdfWithSignature = async () => {
-    const signaturesToRender = signatures.filter((sig) => sig.shouldRender);
-    
+    const signaturesToRender = signatures.filter((sig) => sig.signerRole.includes(signedInUserRole));
     const sigCanvasPromises = signaturesToRender.map((sig) => sig.ref.current.getCanvas());
     const signatureCanvases = await Promise.all(sigCanvasPromises);
 
@@ -68,7 +70,7 @@ const RPDF = () => {
     const pngImagePromises = signatureCanvases.map((canvas) => fetch(canvas.toDataURL()).then((res) => res.arrayBuffer()));
     const pngImageBytes = await Promise.all(pngImagePromises);
     const pngImages = await Promise.all(pngImageBytes.map((bytes) => pdfDoc.embedPng(bytes)));
-    
+
     signaturesToRender.forEach((signature, index) => {
       const pngImage = pngImages[index];
       const page = pdfDoc.getPage(signature.page - 1);
@@ -103,7 +105,7 @@ const RPDF = () => {
         {Array.from(new Array(numPages), (el, index) => index + 1).map((pageNumber) => (
           <Page scale={pageScale} key={pageNumber} pageNumber={pageNumber} renderAnnotationLayer={false} renderTextLayer={false}>
             {signatures.map((signature, index) => {
-              if (signature.page === pageNumber && signature.shouldRender) {
+              if (signature.page === pageNumber && signature.shouldRender && signature.signerRole.includes(signedInUserRole)) {
                 return (
                   <SignatureBox
                     key={index}
