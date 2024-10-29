@@ -16,21 +16,24 @@ const RPDF = () => {
       ref: useRef(null),
       sigDrawn: false,
       page: 3,
-      sigPosition: { x: 173, y: 640, width: 180, height: 58 },
+      // sigPosition: { x: 173, y: 640, width: 180, height: 58 },
+      sigPosition: { x: 70, y: 298, width: 105, height: 43 },
     },
     {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
-      sigPosition: { x: 74, y: 81, width: 180, height: 58 },
+      // sigPosition: { x: 74, y: 81, width: 180, height: 58 },
+      sigPosition: { x: 35, y: 40, width: 90, height: 29 },
     },
     {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
-      sigPosition: { x: 297, y: 81, width: 180, height: 58 },
+      // sigPosition: { x: 297, y: 81, width: 180, height: 58 },
+      sigPosition: { x: 130, y: 40, width: 90, height: 29 },
     },
   ]);
 
@@ -83,7 +86,9 @@ const RPDF = () => {
     <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {Array.from(new Array(numPages), (el, index) => index + 1).map((pageNumber) => (
-          <Page width={1280} key={pageNumber} pageNumber={pageNumber} renderAnnotationLayer={false} renderTextLayer={false}>
+          <Page 
+          // width={1280} 
+          key={pageNumber} pageNumber={pageNumber} renderAnnotationLayer={false} renderTextLayer={false}>
             {signatures.map((signature, index) => {
               if (signature.page === pageNumber && signature.shouldRender) {
                 return (
