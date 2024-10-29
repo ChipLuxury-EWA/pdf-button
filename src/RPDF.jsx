@@ -16,23 +16,25 @@ const RPDF = () => {
       ref: useRef(null),
       sigDrawn: false,
       page: 3,
-      sigPosition: { x: 70, y: 298, width: 105, height: 43 },
+      sigPosition: { x: 70, y: 298, width: 105, height: 40 },
     },
     {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
-      sigPosition: { x: 35, y: 40, width: 90, height: 29 },
+      sigPosition: { x: 35, y: 39, width: 90, height: 29 },
     },
     {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
-      sigPosition: { x: 130, y: 40, width: 90, height: 29 },
+      sigPosition: { x: 135, y: 39, width: 90, height: 29 },
     },
   ]);
+
+  const allSignaturesDrawn = signatures.some((sig) => !sig.sigDrawn);
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
@@ -104,7 +106,28 @@ const RPDF = () => {
           </Page>
         ))}
       </div>
-      <button onClick={updatePdfWithSignature}>OK!</button>
+      <div style={{ display: "flex" }}>
+        <button
+          onClick={updatePdfWithSignature}
+          disabled={allSignaturesDrawn}
+          style={{
+            backgroundColor: "#13135b",
+            border: "none",
+            cursor: "pointer",
+            color: "white",
+            padding: "10px 40px",
+            margin: "20px auto",
+            textAlign: "center",
+            borderRadius: 5,
+            fontSize: 16,
+            fontWeight: "bold",
+            opacity: allSignaturesDrawn ? 0.5 : 1,
+            pointerEvents: allSignaturesDrawn ? "none" : "auto",
+          }}
+        >
+          סיים
+        </button>
+      </div>
     </Document>
   );
 };

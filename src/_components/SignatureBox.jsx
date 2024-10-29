@@ -1,16 +1,20 @@
 import SignatureCanvas from "react-signature-canvas";
 
 const githubButtonStyle = {
+  all: "unset",
   display: "inline-block",
   outline: 0,
-  cursor: "pointer",
+  cursor: "grab",
   padding: 0,
   margin: 0,
   fontSize: 12,
   lineHeight: "15px",
+  position: "relative",
+  top: -4,
+  left: -2,
 };
 
-const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 110, sigRef, buttonPosition }) => {
+const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 110, sigRef, buttonPosition, onDraw }) => {
   const clear = () => sigRef.current.clear();
 
   return (
@@ -24,9 +28,10 @@ const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 1
         style={{
           width,
           height,
-          border: "1px solid rgba(0,0,0,0.1)",
+          border: ".5px solid rgba(0,0,0,0.1)",
           cursor: "crosshair",
-          backgroundColor: "#fff",
+          backgroundColor: "rgb(255 255 233)",
+          borderRadius: 2,
         }}
       >
         <SignatureCanvas
@@ -36,10 +41,11 @@ const SignatureBox = ({ width = 250, height = 100, positionX = 10, positionY = 1
           minWidth={1}
           maxWidth={1}
           velocityFilterWeight={0.1}
+          onEnd={onDraw}
         />
       </div>
       <button style={githubButtonStyle} onClick={clear}>
-      🔄
+        🔄
       </button>
     </div>
   );
