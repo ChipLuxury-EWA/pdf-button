@@ -34,6 +34,8 @@ const RPDF = () => {
     },
   ]);
 
+  const allSignaturesDrawn = signatures.some((sig) => !sig.sigDrawn);
+
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
   }
@@ -104,7 +106,28 @@ const RPDF = () => {
           </Page>
         ))}
       </div>
-      <button onClick={updatePdfWithSignature}>OK!</button>
+      <div style={{ display: "flex" }}>
+        <button
+          onClick={updatePdfWithSignature}
+          disabled={allSignaturesDrawn}
+          style={{
+            backgroundColor: "#13135b",
+            border: "none",
+            cursor: "pointer",
+            color: "white",
+            padding: "10px 40px",
+            margin: "20px auto",
+            textAlign: "center",
+            borderRadius: 5,
+            fontSize: 16,
+            fontWeight: "bold",
+            opacity: allSignaturesDrawn ? 0.5 : 1,
+            pointerEvents: allSignaturesDrawn ? "none" : "auto",
+          }}
+        >
+          סיים
+        </button>
+      </div>
     </Document>
   );
 };
