@@ -7,7 +7,17 @@ import { PDFDocument } from "pdf-lib";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 
+const maxWidthPercentsFill = 0.95;
+const a4WidthInPx = 595;
+const windowMaxWidth = maxWidthPercentsFill / a4WidthInPx;
+const maxScale = 2; //adjust the maximum scale that the PDF can be zoomed to
+const calcPageScale = () => {
+  const windowScale = window.innerWidth * windowMaxWidth;
+  return windowScale > maxScale ? maxScale : windowScale;
+};
+
 const RPDF = () => {
+  const [pageScale, setPageScale] = useState(calcPageScale);
   const [numPages, setNumPages] = useState(null);
   const [modifiedPdfUrl, setModifiedPdfUrl] = useState(null);
   const [signatures, setSignatures] = useState([
@@ -16,24 +26,21 @@ const RPDF = () => {
       ref: useRef(null),
       sigDrawn: false,
       page: 3,
-      // sigPosition: { x: 173, y: 640, width: 180, height: 58 },
-      sigPosition: { x: 70, y: 298, width: 105, height: 43 },
+      sigPosition: { x: 73, y: 297, width: 91, height: 29 },
     },
     {
       shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
-      // sigPosition: { x: 74, y: 81, width: 180, height: 58 },
-      sigPosition: { x: 35, y: 40, width: 90, height: 29 },
+      sigPosition: { x: 30, y: 38, width: 91, height: 29 },
     },
     {
-      shouldRender: true,
+      shouldRender: false,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
-      // sigPosition: { x: 297, y: 81, width: 180, height: 58 },
-      sigPosition: { x: 130, y: 40, width: 90, height: 29 },
+      sigPosition: { x: 131, y: 38, width: 91, height: 29 },
     },
   ]);
 
@@ -44,7 +51,7 @@ const RPDF = () => {
   }
 
   const updatePdfWithSignature = async () => {
-    const sigCanvasPromises = signatures.map((sig) => sig.ref.current.getCanvas());
+    const sigCanvasPromises = signatures.filter((sig) => sig.shouldRender).map((sig) => sig.ref.current.getCanvas());
     const signatureCanvases = await Promise.all(sigCanvasPromises);
 
     if (signatureCanvases.some((signatureCanvas) => signatureCanvas.width === 0 || signatureCanvas.height === 0)) {
@@ -60,7 +67,7 @@ const RPDF = () => {
     const pngImageBytes = await Promise.all(pngImagePromises);
     const pngImages = await Promise.all(pngImageBytes.map((bytes) => pdfDoc.embedPng(bytes)));
 
-    signatures.forEach((signature, index) => {
+    signatures.filter((sig) => sig.shouldRender).forEach((signature, index) => {
       const pngImage = pngImages[index];
       const page = pdfDoc.getPage(signature.page - 1);
       page.drawImage(pngImage, signature.sigPosition);
@@ -82,27 +89,27 @@ const RPDF = () => {
     }
   }, [modifiedPdfUrl]);
 
+  useEffect(() => {
+    const handleResize = () => setPageScale(calcPageScale);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {Array.from(new Array(numPages), (el, index) => index + 1).map((pageNumber) => (
-          <Page
-            scale={3}
-            key={pageNumber}
-            pageNumber={pageNumber}
-            renderAnnotationLayer={false}
-            renderTextLayer={false}
-          >
+          <Page scale={pageScale} key={pageNumber} pageNumber={pageNumber} renderAnnotationLayer={false} renderTextLayer={false}>
             {signatures.map((signature, index) => {
               if (signature.page === pageNumber && signature.shouldRender) {
                 return (
                   <SignatureBox
                     key={index}
                     sigRef={signature.ref}
-                    width={signature.sigPosition.width}
-                    height={signature.sigPosition.height}
-                    positionX={signature.sigPosition.x}
-                    positionY={signature.sigPosition.y}
+                    width={signature.sigPosition.width * pageScale}
+                    height={signature.sigPosition.height * pageScale}
+                    positionX={signature.sigPosition.x * pageScale}
+                    positionY={signature.sigPosition.y * pageScale}
                     onDraw={() => {
                       signature.sigDrawn = true;
                       setSignatures([...signatures]);
