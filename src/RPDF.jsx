@@ -36,7 +36,7 @@ const RPDF = () => {
       sigPosition: { x: 30, y: 38, width: 91, height: 29 },
     },
     {
-      shouldRender: false,
+      shouldRender: true,
       ref: useRef(null),
       sigDrawn: false,
       page: 4,
