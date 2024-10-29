@@ -13,7 +13,7 @@ const windowMaxWidth = maxWidthPercentsFill / a4WidthInPx;
 const maxScale = 2; //adjust the maximum scale that the PDF can be zoomed to
 const calcPageScale = () => {
   const windowScale = window.innerWidth * windowMaxWidth;
-  return windowScale > maxScale ? maxScale : windowScale;
+  return Math.min(windowScale, maxScale);
 };
 
 const RPDF = () => {
@@ -52,6 +52,7 @@ const RPDF = () => {
 
   const updatePdfWithSignature = async () => {
     const signaturesToRender = signatures.filter((sig) => sig.shouldRender);
+    
     const sigCanvasPromises = signaturesToRender.map((sig) => sig.ref.current.getCanvas());
     const signatureCanvases = await Promise.all(sigCanvasPromises);
 
