@@ -87,7 +87,7 @@ const RPDF = () => {
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {Array.from(new Array(numPages), (el, index) => index + 1).map((pageNumber) => (
           <Page
-            // width={1280}
+            scale={3}
             key={pageNumber}
             pageNumber={pageNumber}
             renderAnnotationLayer={false}
