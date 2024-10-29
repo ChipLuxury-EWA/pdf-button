@@ -37,7 +37,7 @@ const RPDF = () => {
     },
   ]);
 
-  const allSignaturesDrawn = signatures.some((sig) => !sig.sigDrawn);
+  const allSignaturesDrawn = signatures.some((sig) => sig.shouldRender && !sig.sigDrawn);
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
@@ -86,9 +86,13 @@ const RPDF = () => {
     <Document file={pdfFile} onLoadSuccess={onDocumentLoadSuccess}>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {Array.from(new Array(numPages), (el, index) => index + 1).map((pageNumber) => (
-          <Page 
-          // width={1280} 
-          key={pageNumber} pageNumber={pageNumber} renderAnnotationLayer={false} renderTextLayer={false}>
+          <Page
+            // width={1280}
+            key={pageNumber}
+            pageNumber={pageNumber}
+            renderAnnotationLayer={false}
+            renderTextLayer={false}
+          >
             {signatures.map((signature, index) => {
               if (signature.page === pageNumber && signature.shouldRender) {
                 return (
