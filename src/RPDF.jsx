@@ -1,7 +1,6 @@
 import { Document, Page, pdfjs } from "react-pdf";
-import pdfFile from "./assets/tofes-161.pdf";
+import pdfFile from "./assets/MR6.pdf";
 import { useEffect, useState } from "react";
-import { useRef } from "react";
 import SignatureBox from "./_components/SignatureBox";
 import { PDFDocument } from "pdf-lib";
 
@@ -23,15 +22,16 @@ const findSignaturePosition = async ({ pdfUrl, searchTerms = [] }) => {
   for (let pageIndex = 1; pageIndex <= pdf.numPages; pageIndex++) {
     const searchPage = await pdf.getPage(pageIndex);
     const textContent = await searchPage.getTextContent();
+    console.log(textContent.items);
     const foundedSearchTerms = textContent.items.filter((item) => searchTerms.includes(item.str));
-    if (pageIndex === 4) {  
-      if (foundedSearchTerms.length > 0) {
-        console.log(foundedSearchTerms[1]);
-      }
-    }
+
+    foundedSearchTerms.forEach((term) => {
+      const { height, width, transform } = term;
+      const [x, y] = [transform[4] - (width * 1.5), transform[5] + height];
+      signatureLocations.push({ pageIndex, height, width, x, y });
+    });
   }
 
-  console.log("Signature locations:", signatureLocations.length > 0 ? signatureLocations : "No signatures found");
   return signatureLocations;
 };
 
@@ -42,36 +42,49 @@ const RPDF = ({ signedInUserRole }) => {
   const [numPages, setNumPages] = useState(null);
   const [modifiedPdfUrl, setModifiedPdfUrl] = useState(null);
   const [signatures, setSignatures] = useState([
-    {
-      shouldRender: true,
-      signerRole: ["worker"],
-      ref: useRef(null),
-      sigDrawn: false,
-      page: 3,
-      sigPosition: { x: 73, y: 297, width: 91, height: 29 },
-    },
-    {
-      shouldRender: true,
-      signerRole: ["employer1"],
-      ref: useRef(null),
-      sigDrawn: false,
-      page: 4,
-      sigPosition: { x: 30, y: 38, width: 91, height: 29 },
-    },
-    {
-      shouldRender: true,
-      signerRole: ["employer1", "employer2"],
-      ref: useRef(null),
-      sigDrawn: false,
-      page: 4,
-      sigPosition: { x: 131, y: 38, width: 91, height: 29 },
-    },
+    // {
+    //   shouldRender: true,
+    //   signerRole: ["worker"],
+    //   ref: useRef(null),
+    //   sigDrawn: false,
+    //   page: 3,
+    //   sigPosition: { x: 73, y: 297, width: 91, height: 29 },
+    // },
+    // {
+    //   shouldRender: true,
+    //   signerRole: ["employer1"],
+    //   ref: useRef(null),
+    //   sigDrawn: false,
+    //   page: 4,
+    //   sigPosition: { x: 30, y: 38, width: 91, height: 29 },
+    // },
+    // {
+    //   shouldRender: true,
+    //   signerRole: ["employer1", "employer2"],
+    //   ref: useRef(null),
+    //   sigDrawn: false,
+    //   page: 4,
+    //   sigPosition: { x: 131, y: 38, width: 91, height: 29 },
+    // },
   ]);
 
   useEffect(() => {
-    findSignaturePosition({ pdfUrl: pdfFile, searchTerms: ["חתימה", "חותמת"] }).then((signatures) => {
-      // console.log(signatures);
+    findSignaturePosition({ pdfUrl: pdfFile, searchTerms: ["חותמת", "חתימה", "חתימת"] }).then((signaturesFound) => {
+      const newSigArray = []
+      signaturesFound.forEach((sig) => {
+        newSigArray.push({
+          shouldRender: true,
+          signerRole: ["worker"],
+          // ref: useRef(null),
+          sigDrawn: false,
+          page: sig.pageIndex,
+          sigPosition: { x: sig.x, y: sig.y, width: 91, height: 29 },
+        })
+      })
+      setSignatures(newSigArray)
+    
     });
+
   }, []);
 
   const allSignaturesDrawn = signatures.some((sig) => sig.signerRole.includes(signedInUserRole) && !sig.sigDrawn);
