@@ -16,6 +16,27 @@ const calcPageScale = () => {
   return Math.min(windowScale, maxScale);
 };
 
+//////////////////////// search text and get position ////////////////////////
+const findSignaturePosition = async ({ pdfUrl, searchTerms = [] }) => {
+  const pdf = await pdfjs.getDocument(pdfUrl).promise;
+  const signatureLocations = [];
+  for (let pageIndex = 1; pageIndex <= pdf.numPages; pageIndex++) {
+    const searchPage = await pdf.getPage(pageIndex);
+    const textContent = await searchPage.getTextContent();
+    const foundedSearchTerms = textContent.items.filter((item) => searchTerms.includes(item.str));
+    if (pageIndex === 4) {  
+      if (foundedSearchTerms.length > 0) {
+        console.log(foundedSearchTerms[1]);
+      }
+    }
+  }
+
+  console.log("Signature locations:", signatureLocations.length > 0 ? signatureLocations : "No signatures found");
+  return signatureLocations;
+};
+
+/////////////////////// search text and get position ////////////////////////
+
 const RPDF = ({ signedInUserRole }) => {
   const [pageScale, setPageScale] = useState(calcPageScale);
   const [numPages, setNumPages] = useState(null);
@@ -46,6 +67,12 @@ const RPDF = ({ signedInUserRole }) => {
       sigPosition: { x: 131, y: 38, width: 91, height: 29 },
     },
   ]);
+
+  useEffect(() => {
+    findSignaturePosition({ pdfUrl: pdfFile, searchTerms: ["חתימה", "חותמת"] }).then((signatures) => {
+      // console.log(signatures);
+    });
+  }, []);
 
   const allSignaturesDrawn = signatures.some((sig) => sig.signerRole.includes(signedInUserRole) && !sig.sigDrawn);
 
