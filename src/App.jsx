@@ -6,7 +6,7 @@ function App() {
 
   return (
     <>
-      <div
+      {/* <div
         style={{
           position: "fixed",
           zIndex: 1,
@@ -44,7 +44,7 @@ function App() {
             />
           </label>
         </div>
-      </div>
+      </div> */}
       <main
         style={{
           display: "flex",
