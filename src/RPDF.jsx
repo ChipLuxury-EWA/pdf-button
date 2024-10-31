@@ -1,7 +1,6 @@
 import { Document, Page, pdfjs } from "react-pdf";
-import pdfFile from "./assets/tofes-161.pdf";
+import pdfFile from "./assets/MR6.pdf";
 import { useEffect, useState } from "react";
-import { useRef } from "react";
 import SignatureBox from "./_components/SignatureBox";
 import { PDFDocument } from "pdf-lib";
 
@@ -16,36 +15,177 @@ const calcPageScale = () => {
   return Math.min(windowScale, maxScale);
 };
 
+//////////////////////// search text and get position ////////////////////////
+const findSignaturePosition = async ({ pdfUrl, searchTerms = [] }) => {
+  const pdf = await pdfjs.getDocument(pdfUrl).promise;
+  const signatureLocations = [];
+  for (let pageIndex = 1; pageIndex <= pdf.numPages; pageIndex++) {
+    const searchPage = await pdf.getPage(pageIndex);
+    const textContent = await searchPage.getTextContent();
+    const foundedSearchTerms = textContent.items.filter((item) => {
+      return searchTerms.some((word) => {
+        return item.str.indexOf(word) > -1;
+      });
+    });
+    console.log(foundedSearchTerms);
+    foundedSearchTerms.forEach((term) => {
+      const { height, width, transform } = term;
+      const [x, y] = [transform[4], transform[5] + height];
+      signatureLocations.push({ pageIndex, height, width, x, y });
+    });
+  }
+
+  return signatureLocations;
+};
+
+// const detectTextAndLines = async (pdfUrl) => {
+//   const pdf = await pdfjs.getDocument(pdfUrl).promise;
+//   const textPositions = [];
+//   const linePositions = [];
+
+//   for (let pageIndex = 0; pageIndex < pdf.numPages; pageIndex++) {
+//     const page = await pdf.getPage(pageIndex + 1);
+//     const ops = await page.getOperatorList();
+//     console.log(ops);
+//     ops.fnArray.forEach((fn, index) => {
+//       const args = ops.argsArray[index];
+//       // Detect text rendering commands
+//       if (fn === pdfjs.OPS.showText || fn === pdfjs.OPS.showTextGlyphs) {
+//         console.log(args);
+//         textPositions.push({
+//           page: pageIndex + 1,
+//           command: fn,
+//           args: args, // Contains the text data
+//         });
+//       }
+//       // Detect line drawing commands
+//       if (fn === pdfjs.OPS.moveTo || fn === pdfjs.OPS.lineTo || fn === pdfjs.OPS.stroke) {
+//         linePositions.push({
+//           page: pageIndex + 1,
+//           command: fn,
+//           args: args, // Contains coordinates for lines
+//         });
+//       }
+//     });
+//   }
+
+//   return { textPositions, linePositions };
+// };
+
+const detectTextAndLinesNearTarget = async (pdfUrl, targetText) => {
+  const pdf = await pdfjs.getDocument(pdfUrl).promise;
+  const textPositions = [];
+  const linePositions = [];
+
+  for (let pageIndex = 0; pageIndex < pdf.numPages; pageIndex++) {
+    const page = await pdf.getPage(pageIndex + 1);
+    const ops = await page.getOperatorList();
+    const textContent = await page.getTextContent();
+
+    // Get text positions and detect target text
+    textContent?.items.forEach((item) => {
+      const { str, transform } = item;
+      if (str.includes(targetText)) {
+        console.log(str);
+        const x = transform[4];
+        const y = transform[5];
+        textPositions.push({ page: pageIndex + 1, text: str, x, y });
+      }
+    });
+
+    // Get line positions
+    ops.fnArray.forEach((fn, index) => {
+      const args = ops.argsArray[index];
+      // console.log(args);
+      if (
+        fn === pdfjs.OPS.moveTo ||
+        fn === pdfjs.OPS.lineTo ||
+        fn === pdfjs.OPS.stroke ||
+        fn === pdfjs.OPS.rectangle ||
+        fn === pdfjs.OPS.fill ||
+        fn === pdfjs.OPS.fillStroke ||
+        fn === pdfjs.OPS.eoFill ||
+        fn === pdfjs.OPS.closePath ||
+        fn === pdfjs.OPS.curveTo
+      ) {
+        const commandArgs = args;
+        linePositions.push({
+          page: pageIndex + 1,
+          command: fn,
+          args: commandArgs, // Coordinates for lines
+        });
+      }
+    });
+  }
+
+  // Find lines near target text
+  const nearbyLines = [];
+  textPositions?.forEach((textPos) => {
+    const { x, y } = textPos;
+    linePositions?.forEach((linePos) => {
+      const [lineX, lineY] = linePos.args;
+      const distance = Math.sqrt((lineX - x) ** 2 + (lineY - y) ** 2);
+      if (distance < 50) {
+        // Adjust threshold as needed
+        nearbyLines.push({ ...linePos, nearText: textPos.text });
+      }
+    });
+  });
+
+  return { textPositions, linePositions, nearbyLines };
+};
+
+/////////////////////// search text and get position ////////////////////////
+
 const RPDF = ({ signedInUserRole }) => {
   const [pageScale, setPageScale] = useState(calcPageScale);
   const [numPages, setNumPages] = useState(null);
   const [modifiedPdfUrl, setModifiedPdfUrl] = useState(null);
   const [signatures, setSignatures] = useState([
-    {
-      shouldRender: true,
-      signerRole: ["worker"],
-      ref: useRef(null),
-      sigDrawn: false,
-      page: 3,
-      sigPosition: { x: 73, y: 297, width: 91, height: 29 },
-    },
-    {
-      shouldRender: true,
-      signerRole: ["employer1"],
-      ref: useRef(null),
-      sigDrawn: false,
-      page: 4,
-      sigPosition: { x: 30, y: 38, width: 91, height: 29 },
-    },
-    {
-      shouldRender: true,
-      signerRole: ["employer1", "employer2"],
-      ref: useRef(null),
-      sigDrawn: false,
-      page: 4,
-      sigPosition: { x: 131, y: 38, width: 91, height: 29 },
-    },
+    // {
+    //   shouldRender: true,
+    //   signerRole: ["worker"],
+    //   ref: useRef(null),
+    //   sigDrawn: false,
+    //   page: 3,
+    //   sigPosition: { x: 73, y: 297, width: 91, height: 29 },
+    // },
+    // {
+    //   shouldRender: true,
+    //   signerRole: ["employer1"],
+    //   ref: useRef(null),
+    //   sigDrawn: false,
+    //   page: 4,
+    //   sigPosition: { x: 30, y: 38, width: 91, height: 29 },
+    // },
+    // {
+    //   shouldRender: true,
+    //   signerRole: ["employer1", "employer2"],
+    //   ref: useRef(null),
+    //   sigDrawn: false,
+    //   page: 4,
+    //   sigPosition: { x: 131, y: 38, width: 91, height: 29 },
+    // },
   ]);
+
+  useEffect(() => {
+    // findSignaturePosition({ pdfUrl: pdfFile, searchTerms: ["חותמת", "חתימ", "חתימת"] }).then((signaturesFound) => {
+    //   console.log(signaturesFound);
+    //   const newSigArray = [];
+    //   signaturesFound.forEach((sig) => {
+    //     newSigArray.push({
+    //       shouldRender: true,
+    //       signerRole: ["worker"],
+    //       // ref: useRef(null),
+    //       sigDrawn: false,
+    //       page: sig.pageIndex,
+    //       sigPosition: { x: sig.x, y: sig.y, width: 91, height: 29 },
+    //     });
+    //   });
+    //   setSignatures(newSigArray);
+    // });
+    detectTextAndLinesNearTarget(pdfFile, "חתימת");
+  }, []);
 
   const allSignaturesDrawn = signatures.some((sig) => sig.signerRole.includes(signedInUserRole) && !sig.sigDrawn);
 
